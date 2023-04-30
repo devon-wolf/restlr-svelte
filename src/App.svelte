@@ -1,47 +1,86 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import RadioGroup from "./lib/RadioGroup.svelte";
+
+  const methods = ["GET", "POST", "PUT", "PATCH", "DELETE"];
+  const defaultHeaders = '{"Content-Type": "application-json"}';
+
+  let method = "GET";
+  function handleMethodChange(e) {
+    method = e.target.value;
+  }
+
+  let address = "";
+  function handleAddressInput(e) {
+    address = e.target.value;
+  }
+
+  let reqHeaders = defaultHeaders;
+  function handleHeaderInput(e) {
+    reqHeaders = e.target.value;
+  }
+
+  let reqBody = "";
+  function handleBodyInput(e) {
+    reqBody = e.target.value;
+  }
+
+  let status;
+  let results;
+  async function handleSubmit(e) {
+    e.preventDefault();
+    try {
+      let response;
+
+      if (method === "GET") {
+        response = await fetch(address);
+      } else {
+        response = await fetch(address, {
+          method,
+          body: reqBody,
+          headers: JSON.parse(reqHeaders),
+        });
+      }
+      status = response.status;
+
+      try {
+        const json = await response.json();
+        results = json ? JSON.stringify(json) : null;
+      } catch (error) {
+        results = response.statusText;
+      }
+    } catch (error) {
+      console.error(error);
+      results = error.message;
+    }
+  }
 </script>
 
 <main>
   <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
+    <form on:submit={handleSubmit}>
+      <RadioGroup
+        radioGroupName="methods"
+        radioNames={methods}
+        selectedRadio={method}
+        handleRadioChange={handleMethodChange}
+      />
+
+      <p>Address is {address}</p>
+      <input value={address} on:input={handleAddressInput} />
+
+      <p>Header input is {reqHeaders}</p>
+      <textarea value={reqHeaders} on:input={handleHeaderInput} />
+
+      <p>Body input is {reqBody}</p>
+      <textarea value={reqBody} on:input={handleBodyInput} />
+
+      <button type="submit">Submit</button>
+    </form>
   </div>
-  <h1>Vite + Svelte</h1>
-
-  <div class="card">
-    <Counter />
+  <div>
+    {#if results}
+      {status}
+      {results}
+    {/if}
   </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
 </main>
-
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>
