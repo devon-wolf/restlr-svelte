@@ -79,7 +79,9 @@
   </div>
   <div>
     {#if results}
-      {status}
+      {#if status}
+        {status}
+      {/if}
       {results}
     {/if}
   </div>
